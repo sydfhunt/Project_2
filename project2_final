@@ -1,0 +1,98 @@
+## SI 206 W17 - Project 2
+
+## COMMENT HERE WITH:
+## Your name: Sydney Hunt
+## Anyone you worked with on this project:
+
+## Below we have provided import statements, comments to separate out the
+#parts of the project, instructions/hints/examples, and at the end, TESTS.
+
+###########
+
+## Import statements:
+import unittest
+import requests
+import re
+import ssl
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+
+
+## Part 1 -- Define your find_urls function here.
+## INPUT: any string
+## RETURN VALUE: a list of strings that represents all of the URLs in the input string
+
+
+## For example:
+## find_urls("http://www.google.com is a great site") should return ["http://www.google.com"]
+## find_urls("I love looking at websites like http://etsy.com and http://instagram.com and stuff") should return ["http://etsy.com","http://instagram.com"]
+## find_urls("the internet is awesome #worldwideweb") should return [], empty list
+
+def find_urls(itm):
+    #compiles list of url
+
+    lst_url= re.findall('http[s]?://[a-z]+[.]+[a-z]+\S+', itm)
+    return lst_url
+
+
+
+## PART 2  - Define a function grab_headlines.
+## INPUT: N/A. No input.
+## Grab the headlines from the "Most Read" section of
+## http://www.michigandaily.com/section/opinion
+
+def grab_headlines():
+    #collectin most read headlines in list mostfreq
+    michurl = 'http://www.michigandaily.com/section/opinion'
+    var1 = urlopen(michurl).read()
+    var2= BeautifulSoup(var1, "html.parser")
+    mostfreq = []
+
+    for t in var2.find('div', attrs = {'class': 'view view-most-read view-id-most_read view-display-id-panel_pane_1 view-dom-id-99658157999dd0ac5aa62c2b284dd266'}).find_all('a'):
+        mostfreq.append(t.string)
+    return mostfreq
+
+
+
+## PART 3 (a) Define a function called get_umsi_data.  It should create a dictionary
+## saved in a variable umsi_titles whose keys are UMSI people's names, and whose
+## associated values are those people's titles, e.g. "PhD student" or "Associate
+## Professor of Information"...
+## Start with this page: https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All
+## End with this page: https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page=12
+## INPUT: N/A. No input.
+## OUTPUT: Return umsi_titles
+## Reminder: you'll need to use the special header for a request to the UMSI site, like so:
+## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
+
+def get_umsi_data():
+
+    title_final = {}
+
+    for item in range(13):
+        if item == 0:
+            url="https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
+        else:
+            url="https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page="+'&page='+str(item)
+
+        um_names1 = BeautifulSoup(requests.get(url, headers={'User-Agent': 'SI_CLASS'}).text, 'html.parser').find_all('div', {'class': 'field-item even', 'property': 'dc:title'})
+
+        um_titles1 = BeautifulSoup(requests.get(url, headers={'User-Agent': 'SI_CLASS'}).text, 'html.parser').find_all('div', {'class': 'field field-name-field-person-titles field-type-text field-label-hidden'})
+
+        fin = um_names1[item].text
+
+        title_final[fin] = um_titles1[item].text
+
+    return title_final
+
+## PART 3 (b) Define a function called num_students.
+## INPUT: The dictionary from get_umsi_data().
+## OUTPUT: Return number of PhD students in the data.  (Don't forget, I may change the input data)
+
+def num_students(data):
+    phdcount = 0
+    for item in data:
+        if data[item] == 'PhD student':
+            phdcount +=1
+    return phdcount
+
